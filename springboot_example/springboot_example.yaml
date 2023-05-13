@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: springboot-example-deployment
+  labels:
+    app: springboot-example
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: springboot-example
+  template:
+    metadata:
+      labels:
+        app: springboot-example
+    spec:
+      containers:
+        - name: springboot-example
+          image: theswarnim/springboot-example:latest
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: springboot-example-service
+  labels:
+    app: springboot-example
+spec:
+  selector:
+    app: springboot-example
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: prometheus-springboot-example-service-monitor
+  labels:
+    release: "kube-prometheus-stack"
+spec:
+  endpoints:
+    - port: http
+      interval: 30s
+      scrapeTimeout: 10s
+      path: "/actuator/prometheus"
+  namespaceSelector:
+    matchNames:
+      - default
+  selector:
+    matchLabels:
+      app: springboot-example
