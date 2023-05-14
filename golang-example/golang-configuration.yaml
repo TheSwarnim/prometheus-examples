@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: golang-example-deployment
+  labels:
+    app: golang-example
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: golang-example
+  template:
+    metadata:
+      labels:
+        app: golang-example
+    spec:
+      containers:
+        - name: golang-example-container
+          image: theswarnim/golang-example:latest
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 9000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: golang-example-service
+  labels:
+    app: golang-example
+spec:
+  selector:
+    app: golang-example
+  ports:
+    - port: 9000
+      targetPort: 9000
+      protocol: TCP
+      name: http-port
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: golang-example-service-monitor
+  labels:
+    release: "kube-prometheus-stack"
+spec:
+  endpoints:
+    - port: http-port
+      interval: 30s
+      scrapeTimeout: 10s
+      path: "/prometheus"
+  namespaceSelector:
+    matchNames:
+      - default
+  selector:
+    matchLabels:
+      app: golang-example
