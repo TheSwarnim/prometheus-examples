@@ -1,0 +1,1 @@
+helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack -w
